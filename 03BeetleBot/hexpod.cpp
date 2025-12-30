@@ -14,7 +14,7 @@
 #define led_numbers  6
 #define TRIG_PIN A2
 #define ECHO_PIN A3
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(led_numbers, PIN, NEO_GRB + NEO_KHZ800);
+//Adafruit_NeoPixel strip = Adafruit_NeoPixel(led_numbers, PIN, NEO_GRB + NEO_KHZ800);
 SR04 sr04 = SR04(ECHO_PIN,TRIG_PIN);
 
 
@@ -203,24 +203,24 @@ void QUANRUPED::servo_init()
 
 void QUANRUPED::strip_begin(int r_data,int g_data,int b_data)
 {
-  for(int i=0;i<6;i++){
-    strip.setPixelColor(i,strip.Color(r_data,g_data,b_data));
-    strip.show();    
-    delay(50);                                              
-  } 
+  // for(int i=0;i<6;i++){
+  //   strip.setPixelColor(i,strip.Color(r_data,g_data,b_data));
+  //   strip.show();    
+  //   delay(50);                                              
+  // } 
 }
 void QUANRUPED::servo_attach()
 {
 	 s0.attach(2);     s1.attach(3);     s2.attach(4);     s3.attach(5);     s4.attach(6);     s5.attach(7);     s6.attach(8);     s7.attach(9);     s8.attach(10);    s9.attach(11);    s10.attach(12);     s11.attach(13); s12.attach(14);
   s0.write(angle0); s1.write(angle1); s2.write(angle2); s3.write(angle3); s4.write(angle4); s5.write(angle5); s6.write(angle6); s7.write(angle7); s8.write(angle8); s9.write(angle9); s10.write(angle10); s11.write(angle11); s12.write(angle12); 
-	strip.begin();strip.setBrightness(50);
+	// strip.begin();strip.setBrightness(50);
 	
 }
 void QUANRUPED::moveforward()
 {
 	for(int i=0;i<6;i++){
-      strip.setPixelColor(i,strip.Color(255,0,0));
-      strip.show();
+      // strip.setPixelColor(i,strip.Color(255,0,0));
+      // strip.show();
     delay(1);                                                //Turn on the led if battery voltage is to low                                                    
     }                                                //Turn on the led if battery voltage is to low
 	/******************step 1 to step 2************************/
@@ -563,8 +563,8 @@ if(status1>45){
 void QUANRUPED::movebackward()
 {
 	for(int i=0;i<6;i++){
-      strip.setPixelColor(i,strip.Color(55,122,132));
-      strip.show(); 
+      // strip.setPixelColor(i,strip.Color(55,122,132));
+      // strip.show(); 
       delay(1);                                              
      }
   /******************step 1 to step 2************************/
@@ -892,8 +892,8 @@ if(status1>45){
 void QUANRUPED::turnright()
 {
 	for(int i=0;i<6;i++){
-      strip.setPixelColor(i,strip.Color(122,55,232));
-      strip.show(); 
+      // strip.setPixelColor(i,strip.Color(122,55,232));
+      // strip.show(); 
       delay(1);                                              
      }
 /********************step 1  first******************************/  
@@ -1214,8 +1214,8 @@ if(status1>45){
 void QUANRUPED::turnleft()
 {
 	 for(int i=0;i<6;i++){
-      strip.setPixelColor(i,strip.Color(122,232,55));
-      strip.show(); 
+      // strip.setPixelColor(i,strip.Color(122,232,55));
+      // strip.show(); 
       delay(1);                                              
      }
 /********************step 1  third******************************/  
@@ -1749,8 +1749,8 @@ delay(actionspeed);
 }
 
 for(int i=0;i<6;i++){
-      strip.setPixelColor(i,strip.Color(129,67,213));
-      strip.show();    
+      // strip.setPixelColor(i,strip.Color(129,67,213));
+      // strip.show();    
       delay(1);                                              
     } 
 //PROCESS 1:
