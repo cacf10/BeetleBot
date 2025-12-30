@@ -1,124 +1,76 @@
-#include <Servo.h>
-#include <SoftwareSerial.h>
+#include <ESP8266WiFi.h>
+#include <ESP8266WebServer.h>
 
-SoftwareSerial softwareSerial1(A0, A1);
-Servo s;
+const char* ssid = "BeetleBot";
+const char* password = "12345678";
 
-String text1 = "1";
-String text2 = "2";
-String text3 = "3";
-String text4 = "4";
-String text5 = "5";
-String text6 = "10";
-String text7 = "7";
-String text8 = "8";
-String text9 = "9";
+ESP8266WebServer server(80);
 
-String phone1 = "forwardStart\n";
-String phone2 = "backwardStart\n";
-String phone3 = "leftStart\n";
-String phone4 = "rightStart\n";
-String phone5 = "aStart\n";
-String phone6 = "bStart\n";
-
-String phone7 = "forwardStop\n";
-String phone8 = "backwardStop\n";
-String phone9 = "leftStop\n";
-String phone10 = "rightStop\n";
-String comdata = "";
-char judge;
-void setup()
-{
-  s.attach(2);
-  s.write(90);
-  Serial.begin(115200);       // set up a wifi serial communication baud rate 115200
-
-  Serial.println("AT+CWMODE=3\r\n");//set to softAP+station mode
-  delay(1000);     //delay 4s
-  Serial.println("AT+CWSAP=\"BEETLE_BOT\",\"12345678\",8,2\r\n");   //TCP Protocol, server IP addr, port
-  delay(1000);     //delay 4s
-  Serial.println("AT+RST\r\n");     //reset wifi
-  delay(1000);     //delay 4s
-  Serial.println("AT+CIPMUX=1\r\n");//set to multi-connection mode
-  delay(1000);
-  Serial.println("AT+CIPSERVER=1\r\n");//set as server
-  delay(1000);
-  Serial.println("AT+CIPSTO=7000\r\n");//keep the wifi connecting 7000 seconds
-  delay(1000);
-  
-  softwareSerial1.begin(115200);       // set up a wifi serial communication baud rate 115200
-
+/* ===== 网页 ===== */
+const char PAGE[] PROGMEM = R"rawliteral(
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body{font-family:Arial;text-align:center;}
+button{
+  width:90px;height:60px;
+  font-size:16px;
+  margin:6px;
 }
-int angle = 90;
-void loop()
-{
-  while (softwareSerial1.available() > 0)
-  {
-    comdata += char(softwareSerial1.read());
-    delay(1);
-  }
-  judgement();
-  Serial.print("Data: ");//keep the wifi connecting 7000 seconds
-  Serial.println(judge);//keep the wifi connecting 7000 seconds
-  switch (judge)
-  {
-    case 1: {
-        angle += 5;
-        judge = 0;
-      }
-      break;
-    case 2: {
-        angle -= 5;
-        judge = 0;
-      }
-      break;
-  }
-  s.write(angle);
+</style>
+</head>
+<body>
+
+<h3>机器人控制</h3>
+
+<button onclick="cmd('1')">前进</button><br>
+<button onclick="cmd('4')">向左</button>
+<button onclick="cmd('3')">向右</button><br>
+<button onclick="cmd('2')">后退</button><br><br>
+
+<button onclick="cmd('7')">自动</button>
+<button onclick="cmd('6')">进攻</button><br>
+
+<button onclick="cmd('8')">超声波</button>
+<button onclick="cmd('5')">稳定运行</button>
+
+<script>
+function cmd(c){
+  fetch('/cmd?c='+c);
+}
+</script>
+
+</body>
+</html>
+)rawliteral";
+
+
+void handleRoot() {
+  server.send_P(200, "text/html", PAGE);
 }
 
-void judgement() {
-  if (comdata.length() > 0)
-  { if (comdata.endsWith(text1) || comdata.endsWith(phone1)) { //forward
-      judge = 1;
-
-    }
-    if (comdata.endsWith(text2) || comdata.endsWith(phone2)) { //backward
-      judge = 2;
-    }
-    if (comdata.endsWith(text3) || comdata.endsWith(phone3)) { //right
-      judge = 3;
-    }
-    if (comdata.endsWith(text4) || comdata.endsWith(phone4)) { //left
-      judge = 4;
-    }
-    if (comdata.endsWith(text5) || comdata.endsWith(phone5)) { //balance
-      judge = 5;
-    }
-    if (comdata.endsWith(text6) || comdata.endsWith(phone6)) { //aviod
-      judge = 6;
-    }
-    if (comdata.endsWith(text7))
-    {
-      judge = 7;
-    }
-    if (comdata.endsWith(phone7) || comdata.endsWith(phone8) || comdata.endsWith(phone9) || comdata.endsWith(phone10)) {
-      judge = 11; //初始位置
-    }
-    if (comdata == text8) {
-      judge = 8;
-    }
-    if (comdata.endsWith(text9)) {
-      judge = 9;
-    }
-    if (comdata.endsWith(text5))
-    {
-      ;//A
-    }
-    if (comdata.endsWith(text6))
-    {
-      ;//B
-    }
-    comdata = "";
-    delay(10);
+void handleCmd() {
+  if (server.hasArg("c")) {
+    char c = server.arg("c")[0];
+    Serial.println(c);   // 发给 Arduino
   }
+  server.send(200, "text/plain", "OK");
+}
+
+void setup() {
+  Serial.begin(115200);
+
+  WiFi.mode(WIFI_AP);
+  WiFi.softAP(ssid, password);
+
+  server.on("/", handleRoot);
+  server.on("/cmd", handleCmd);
+  server.begin();
+}
+
+void loop() {
+  server.handleClient();
 }
