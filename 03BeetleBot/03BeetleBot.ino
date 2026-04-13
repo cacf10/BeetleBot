@@ -19,18 +19,6 @@ String text7 = "7";
 String text8 = "8";
 String text9 = "9";
 
-String phone1 = "forwardStart\n";
-String phone2 = "backwardStart\n";
-String phone3 = "rightStart\n";
-String phone4 = "leftStart\n";
-String phone5 = "aStart\n";
-String phone6 = "bStart\n";
-
-String phone7 = "forwardStop\n";
-String phone8 = "backwardStop\n";
-String phone9 = "leftStop\n";
-String phone10 = "rightStop\n";
-
 String comdata = "";
 char judge;
 QUANRUPED q;
@@ -56,9 +44,7 @@ void ESP8266_ATCOMMAND(){
 void setup()
 {
   q.servo_attach();
-  q.strip_begin(255,255,255);
   q.self_balanced_setup();
-  q.strip_begin(50,100,255);
   softwareSerial1.begin(115200);       // set up a wifi serial communication baud rate 115200
   Serial.begin(9600);       // set up a wifi serial communication baud rate 115200
 }
@@ -83,78 +69,13 @@ void loop()
                break; }
       case '6': {q.attack();
                break;}
-      case '8': {q.advoid();
+      case '7': {q.steaty();
                break;}
-      case '9': {q.servo_init();
+      case '8': {q.advoid();
                break;}
       default:  {Serial.println("No Match");
                 break;}
   }
   }
-  //  Serial.println(comdata);
-  //  judgement();
-  
-  //  if(judge==7){                          //send the ultrasonic data to ESP8266
-  //     Serial.println("AT+CIPSEND=0,4\r\n");
-  //     delay(20);
-  //     Serial.println("U:35");
-  //     delay(250);
-  //     for(int u=0;u<104;u++){
-  //     q.sendultrasonic();
-  //     }
-  //     Serial.println("AT+CIPSEND=0,1\r\n");
-  //     delay(20);
-  //     Serial.println("F");
-  //     delay(250);
-      
-  //     judge=0;
-  //    }
-
 }
 
-void judgement(){
-    if (comdata.length() > 0)
-    { if(comdata.endsWith(text1)||comdata.endsWith(phone1)){//forward
-          judge=1;
-        
-        }
-        if(comdata.endsWith(text2)||comdata.endsWith(phone2)){//backward
-          judge=2;
-        }
-        if(comdata.endsWith(text3)||comdata.endsWith(phone3)){//right
-          judge=3;
-        }
-        if(comdata.endsWith(text4)||comdata.endsWith(phone4)){//left
-          judge=4;
-        }
-        if(comdata.endsWith(text5)||comdata.endsWith(phone5)){//balance
-          judge=5;
-        }
-        if(comdata.endsWith(text6)||comdata.endsWith(phone6)){//aviod
-          judge=6;
-        }
-        if(comdata.endsWith(text7))
-        {
-            judge=7;
-        }
-        if(comdata.endsWith(phone7)||comdata.endsWith(phone8)||comdata.endsWith(phone9)||comdata.endsWith(phone10)){
-          judge=11;//初始位置
-        }
-        if(comdata.endsWith(text8)){
-          judge=8;
-        }
-        if(comdata.endsWith(text9)){
-          judge=9;
-        }
-        if(comdata.endsWith(text5))
-        {
-          ;//A
-        }
-        if(comdata.endsWith(text6))
-        {
-          ;//B
-        }
-        comdata = "";
-        delay(10);
-    }
-}

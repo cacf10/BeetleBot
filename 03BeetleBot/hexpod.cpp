@@ -211,7 +211,7 @@ void QUANRUPED::strip_begin(int r_data,int g_data,int b_data)
 }
 void QUANRUPED::servo_attach()
 {
-	 s0.attach(2);     s1.attach(3);     s2.attach(4);     s3.attach(5);     s4.attach(6);     s5.attach(7);     s6.attach(8);     s7.attach(9);     s8.attach(10);    s9.attach(11);    s10.attach(12);     s11.attach(13); s12.attach(14);
+	 s0.attach(2);     s1.attach(3);     s2.attach(4);     s3.attach(5);     s4.attach(6);     s5.attach(7);     s6.attach(8);     s7.attach(9);     s8.attach(10);    s9.attach(11);    s10.attach(12);     s11.attach(13); s12.attach(A0);
   s0.write(angle0); s1.write(angle1); s2.write(angle2); s3.write(angle3); s4.write(angle4); s5.write(angle5); s6.write(angle6); s7.write(angle7); s8.write(angle8); s9.write(angle9); s10.write(angle10); s11.write(angle11); s12.write(angle12); 
 	// strip.begin();strip.setBrightness(50);
 	
@@ -1880,8 +1880,8 @@ void QUANRUPED::ultrasonic()
 //  u[]=a;
 //  }
   
-//  Serial.print(a);
-//  Serial.println("cm");
+  Serial.print(a);
+  Serial.println("cm");
 }
 
 void step_by_step(){
@@ -2282,12 +2282,12 @@ void QUANRUPED::read_mpu_6050_data()
   Wire.requestFrom(0x68,14);                                           //Request 14 bytes from the MPU-6050
 //  while(Wire.available() < 14);                                        //Wait until all the bytes are received
   delay(1);
-  acc_x = Wire.read()<<8|Wire.read();                                  //Add the low and high byte to the acc_x variable
-  acc_y = Wire.read()<<8|Wire.read();                                  //Add the low and high byte to the acc_y variable
+  acc_y = Wire.read()<<8|Wire.read();                                  //Add the low and high byte to the acc_x variable
+  acc_x = Wire.read()<<8|Wire.read();                                  //Add the low and high byte to the acc_y variable
   acc_z = Wire.read()<<8|Wire.read();                                  //Add the low and high byte to the acc_z variable
   temperature = Wire.read()<<8|Wire.read();                            //Add the low and high byte to the temperature variable
-  gyro_x = Wire.read()<<8|Wire.read();                                 //Add the low and high byte to the gyro_x variable
-  gyro_y = Wire.read()<<8|Wire.read();                                 //Add the low and high byte to the gyro_y variable
+  gyro_y = Wire.read()<<8|Wire.read();                                 //Add the low and high byte to the gyro_x variable
+  gyro_x = Wire.read()<<8|Wire.read();                                 //Add the low and high byte to the gyro_y variable
   gyro_z = Wire.read()<<8|Wire.read();                                 //Add the low and high byte to the gyro_z variable
 	
 }
@@ -2362,6 +2362,13 @@ void QUANRUPED::self_balanced()
 }
 void QUANRUPED::self_balanced_test()
 {
+  Serial.print("self_balanced_test() : ");
+  Serial.print(angle_pitch_output);
+  Serial.print(" ");
+  Serial.print(angle_roll_output);
+  Serial.print(" ");
+  Serial.print(angle_roll_output);
+  Serial.println("]] ");
 	 //left-leaning 
     if(angle_pitch_output<-3 && angle_roll_output<5 && angle_roll_output>-5){
       s0.write(angle0+angle_pitch_output*2*2/12);
@@ -2407,96 +2414,21 @@ void QUANRUPED::self_balanced_test()
 }
 
 void QUANRUPED::attack(){
-	//  while(status4<=30){
-//    delay(2);
-//  status4++;
-//  s12.write(90+i2H4);
-//  i2H4++;
-//  if(i2H4==31){
-//    i2H4=0;
-//  }
-//  ultrasonic();
-//  a+=a;
-//  if(status4>30){
-//  status4=0;
-//  break;
-//  }
-//  if(Serial.available()>0){
-//    break;
-//  }
-//  }
-//
-//  while(status4<=30){
-//    delay(2);
-//  status4++;
-//  s12.write(120-i2H4);
-//  i2H4++;
-//  if(i2H4==31){
-//    i2H4=0;
-//  }
-//  ultrasonic();
-//  a+=a;
-//  if(status4>30){
-//  status4=0;
-//  break;
-//  }
-//  if(Serial.available()>0){
-//    break;
-//  }
-//  }
-//
-//  while(status4<=30){
-//    delay(2);
-//  status4++;
-//  s12.write(90-i2H4);
-//  i2H4++;
-//  if(i2H4==31){
-//    i2H4=0;
-//  }
-//  ultrasonic();
-//  a+=a;
-//  if(status4>30){
-//  status4=0;
-//  break;
-//  }
-//  if(Serial.available()>0){
-//    break;
-//  }
-//  }
-//
-//  while(status4<=30){
-//    delay(2);
-//  status4++;
-//  s12.write(60+i2H4);
-//  i2H4++;
-//  if(i2H4==31){
-//    i2H4=0;
-//  }
-//  ultrasonic();
-//  a+=a;
-//  if(status4>30){
-//  status4=0;
-//  break;
-//  }
-//  if(Serial.available()>0){
-//    break;
-//  }
-//  }
-//  a=(a/120);
+Serial.println("attack");
   ultrasonic();
   if(a<=15 && a>0){
-  s0.write(angle0);
-  s1.write(0); //45
-  s3.write(0);//90
-  s2.write(angle2-45); //10
-  s4.write(angle4-45);
-  s5.write(angle5-15); //120
-  s6.write(angle6);//180
-  s7.write(180); //90
-  s8.write(angle8+45);
-  s9.write(angle9+45); //95
-  s11.write(angle11);//0 
-  s10.write(angle10+45);   //180
+  s0.write(10);
+  s1.write(90); //45
+  s3.write(135);//90
+  s2.write(90); //10
+  s4.write(170);
+  s5.write(45); //120
+  s6.write(170);//180
+  s7.write(90); //90
+  s8.write(90);
+  s9.write(45); //95
+  s11.write(135);//0 
+  s10.write(10);   //180
   while(status4<=30){
     delay(10);
   status4++;
@@ -2598,6 +2530,8 @@ if(Serial.available()>0){
 
 void QUANRUPED::steaty()
 {
+  
+  Serial.println("steaty()");
 	self_balanced();s1.write(angle0); s3.write(angle3);s5.write(angle5);
 	s7.write(angle7);s9.write(angle9); s11.write(angle11);self_balanced_test();
 }
@@ -2618,20 +2552,3 @@ void QUANRUPED::sendultrasonic(){
    }
 }
 
-void QUANRUPED::sendbattery(){
-  while(1){
-  battery_voltage =battery_voltage*0.92+((analogRead(A7) * 2.93) + 250)*0.08;
-  showbattery = (battery_voltage-190)/2.93*5/1023*6;
-  if(millis()-showtime>15000){
-    Serial.println("AT+CIPSEND=0,6\r\n");
-    delay(10);
-    Serial.print("V:");
-    Serial.println(showbattery);
-//    delay(250);
-    showtime = millis();
-  }
-  if(Serial.available()>0){
-    break;
-  }
- }
-}
