@@ -10,3 +10,7 @@
 
 4、3D Print Files
    https://makerworld.com.cn/zh/models/1950825-ji-yu-arduinode-liu-zu-ji-qi-ren-beetlebot1-0#profileId-2167572
+
+5、Instruction video：
+https://space.bilibili.com/410043303
+https://www.youtube.com/watch?v=3t2Mfck2I3w&list=PLAseTYO_NbxPexpn8K9ujeWt_rDH2MHov&index=4
