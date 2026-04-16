@@ -1,6 +1,6 @@
 /***********************************************************
 File name: BeetleBot.ino
-Description: Robot motion can be controlled through mobile APP or Python GUI. 
+Description: Robot motion can be controlled through  GUI. 
 Date: 2025/12/29
 ***********************************************************/
 #include "hexpod.h"
