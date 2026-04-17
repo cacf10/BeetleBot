@@ -30,6 +30,8 @@ float angle_roll_acc, angle_pitch_acc;
 float angle_pitch_output, angle_roll_output,angle_yaw_output;
 float angle_changed;
 long a;
+bool steaty_on = false;
+SoftwareSerial *p_softwareSerial;
 
 // Create servo object
   Servo s0;
@@ -152,11 +154,39 @@ QUANRUPED::QUANRUPED()
 {
   ;
 }
+
+QUANRUPED::QUANRUPED(SoftwareSerial *p_Serial)
+{
+  p_softwareSerial = p_Serial;
+}
+
 QUANRUPED::~QUANRUPED()
 {
   ;
 }
+
+bool is_steaty_on()
+{
+  return steaty_on;
+}
  
+
+void QUANRUPED::try_steaty()
+{
+  if (true == is_steaty_on())
+  {
+    Serial.println("try_steaty: true");
+    steaty();
+  }
+}
+ 
+void steaty_off()
+{
+  if (true == is_steaty_on())
+  {
+    steaty_on = false;
+  }
+}
  
 //This is the initialization angle of each leg, you can modify the following values according to your needs.
 void original_latest(){
@@ -200,9 +230,12 @@ void QUANRUPED::servo_attach()
 
 void QUANRUPED::moveforward()
 {
+  if(is_steaty_on()){
+    steaty_off();
+  }
+
 	/******************step 1 to step 2************************/
   /**********rotate forward and rotate backward to the initial position**********/
-
   //PROCESS 4:(raise the second leg)
   while(status4<=45){
     status4++;
@@ -445,6 +478,10 @@ void QUANRUPED::moveforward()
 
 void QUANRUPED::movebackward()
 {
+  if(is_steaty_on()){
+    steaty_off();
+  }
+  
   /******************step 1 to step 2************************/
   // Rotate the leg1
  //PROCESS 5:
@@ -695,6 +732,10 @@ void QUANRUPED::movebackward()
 
 void QUANRUPED::turnright()
 {
+  if(is_steaty_on()){
+    steaty_off();
+  }
+  
   /********************step 1  first******************************/  
   //PROCESS 4:(raise the second leg)
   while(status4<=45){
@@ -944,6 +985,10 @@ void QUANRUPED::turnright()
 
 void QUANRUPED::turnleft()
 {
+  if(is_steaty_on()){
+    steaty_off();
+  }
+  
   /********************step 1  third******************************/  
   //PROCESS 4:(raise the second leg)
   while(status4<=45){
@@ -1188,6 +1233,10 @@ void QUANRUPED::turnleft()
 
 void QUANRUPED::advoid()
 {  
+  if(is_steaty_on()){
+    steaty_off();
+  }
+  
   /**********rotate forward and rotate backward to the initial position**********/
   //PROCESS 4:(raise the second leg)
   while(status4<=45){
@@ -1587,7 +1636,7 @@ void step_by_step(){
       status2=0;
       break;
     }
-    if(Serial.available()>0){
+    if(softwareSerial1.available()>0){
       break;
     }
     delay(actionspeed);
@@ -1941,60 +1990,44 @@ void QUANRUPED::self_balanced()
 
 void QUANRUPED::self_balanced_test()
 {
-  Serial.print("self_balanced_test() : ");
-  Serial.print(angle_pitch_output);
-  Serial.print(" ");
-  Serial.print(angle_roll_output);
-  Serial.print(" ");
-  Serial.print(angle_roll_output);
-  Serial.println("]] ");
-	
-  //left-leaning 
-  if(angle_pitch_output<-3 && angle_roll_output<5 && angle_roll_output>-5){
-    s0.write(angle0+angle_pitch_output*2*2/12);
-    s2.write(angle2+angle_pitch_output*2*2/12); 
-    s4.write(angle4+angle_pitch_output*2*2/12);
-    s6.write(angle6-angle_pitch_output*2*10/12);
-    s8.write(angle8-angle_pitch_output*2*10/12); 
-    s10.write(angle10-angle_pitch_output*2*10/12);
-    
-  }
-  
-  //right-leaning
-  if(angle_pitch_output>3 && angle_roll_output<5 && angle_roll_output>-5){
-    s0.write(angle0-angle_pitch_output*2*10/12);
-    s2.write(angle2-angle_pitch_output*2*10/12); 
-    s4.write(angle4-angle_pitch_output*2*10/12);
-    s6.write(angle6+angle_pitch_output*2*2/12);
-    s8.write(angle8+angle_pitch_output*2*2/12); 
-    s10.write(angle10+angle_pitch_output*2*2/12);
-    
-  }
+  Serial.println("self_balanced_test()");
+  // ===== 参数可调 =====
+  const float DEADZONE = 1.5;      // 死区（度）
+  const float KP_PITCH = 2.2;      // 左右倾斜增益
+  const float KP_ROLL  = 2.0;      // 前后倾斜增益
+  const float MAX_COMP = 18;       // 最大补偿角
 
-  //forward-leaning
-  if(angle_roll_output>3 && angle_pitch_output<3 && angle_pitch_output>-3){
-    s0.write(angle0-angle_roll_output*5*1/12);
-    s6.write(angle6+angle_roll_output*5*1/12);
-    s2.write(angle2-angle_roll_output*5*8/12); 
-    s8.write(angle8+angle_roll_output*5*8/12);
-    s4.write(angle4-angle_roll_output*5*9/12); 
-    s10.write(angle10+angle_roll_output*5*9/12);
-    
-  }
+  float pitch = angle_pitch_output;
+  float roll  = angle_roll_output;
 
-  //backward-leaning
-  if(angle_roll_output<-3 && angle_pitch_output<3 && angle_pitch_output>-3){
-    s0.write(angle0+angle_roll_output*5*9/12);
-    s6.write(angle6-angle_roll_output*5*9/12);
-    s2.write(angle2+angle_roll_output*5*8/12); 
-    s8.write(angle8-angle_roll_output*5*8/12);
-    s4.write(angle4+angle_roll_output*5*1/12); 
-    s10.write(angle10-angle_roll_output*5*1/12);
-  }
+  // ===== 死区 =====
+  if (abs(pitch) < DEADZONE) pitch = 0;
+  if (abs(roll)  < DEADZONE) roll  = 0;
+
+  // ===== 比例补偿 =====
+  float pitchComp = constrain(pitch * KP_PITCH, -MAX_COMP, MAX_COMP);
+  float rollComp  = constrain(roll  * KP_ROLL,  -MAX_COMP, MAX_COMP);
+
+  // ===== 六足高度补偿 =====
+  // 左右三排（pitch）
+  // 前中后三列（roll）
+
+  s0.write(angle0 - pitchComp - rollComp * 0.3);   // 左前
+  s2.write(angle2 - pitchComp - rollComp * 1.0);   // 左中
+  s4.write(angle4 - pitchComp - rollComp * 0.7);   // 左后
+
+  s6.write(angle6 + pitchComp - rollComp * 0.3);   // 右前
+  s8.write(angle8 + pitchComp - rollComp * 1.0);   // 右中
+  s10.write(angle10 + pitchComp - rollComp * 0.7); // 右后
 }
 
 void QUANRUPED::attack(){
   Serial.println("attack");
+
+  if(is_steaty_on()){
+    steaty_off();
+  }
+  
   ultrasonic();
   if(a<=15 && a>0){
     s0.write(10);
@@ -2094,14 +2127,42 @@ void QUANRUPED::attack(){
 
 void QUANRUPED::steaty()
 {
+  steaty_on = true;
   
   Serial.println("steaty()");
-	self_balanced();
-  s1.write(angle0); s3.write(angle3);s5.write(angle5);
-	s7.write(angle7);s9.write(angle9); s11.write(angle11);
+
+  self_balanced();
+
+  s1.write(angle1);
+  s3.write(angle3);
+  s5.write(angle5);
+  s7.write(angle7);
+  s9.write(angle9);
+  s11.write(angle11);
+
   self_balanced_test();
 }
 
+
+void QUANRUPED::automatic()
+{
+  if(is_steaty_on()){
+    steaty_off();
+  }
+  
+  Serial.println("automatic()");
+
+  self_balanced();
+
+  s1.write(angle1);
+  s3.write(angle3);
+  s5.write(angle5);
+  s7.write(angle7);
+  s9.write(angle9);
+  s11.write(angle11);
+
+  self_balanced_test();
+}
 
 void QUANRUPED::sendultrasonic(){
   s12.write(angle);
@@ -2118,3 +2179,13 @@ void QUANRUPED::sendultrasonic(){
   }
 }
 
+
+
+void QUANRUPED::pushup(){
+  Serial.println("pushup");
+
+  if(is_steaty_on()){
+    steaty_off();
+  }
+
+}
