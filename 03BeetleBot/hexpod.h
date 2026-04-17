@@ -2,10 +2,15 @@
 #define _BEETLEBOT_h__
 #include "Arduino.h"
 
+#include <SoftwareSerial.h>
+extern SoftwareSerial softwareSerial1; // 外部变量声明
+
+
  class QUANRUPED
  {
 	public:
 		QUANRUPED();
+    QUANRUPED(SoftwareSerial *);
 		~QUANRUPED();
 		void servo_attach();
 		void moveforward();
@@ -15,6 +20,8 @@
 		void self_balanced_test();
 		void battery();
 		void advoid();
+    void try_steaty();
+    void pushup();
 		
 		void self_balanced_setup();
 		void self_balanced();
@@ -29,6 +36,7 @@
 		void steaty();
 		void sendultrasonic();
 		
+		void automatic();
 		
  };
  #endif
