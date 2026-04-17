@@ -2013,8 +2013,8 @@ void QUANRUPED::self_balanced_test()
   static float dRollFiltered  = 0;
 
   // ===== 当前误差 =====
-  float pitch = angle_pitch_output;
-  float roll  = angle_roll_output;
+  float pitch = angle_pitch_output * 1; 
+  float roll  = angle_roll_output  * -1;
 
   // ===== 死区（防抖）=====
   if (abs(pitch) < DEADZONE) pitch = 0;
