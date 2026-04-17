@@ -145,6 +145,7 @@ unsigned long showtime = 0;
 char serialcom;
 int angle=20;
 char right=0;
+char left=0;
 char count = 0;
 long counter=0;
 
@@ -224,7 +225,7 @@ void QUANRUPED::servo_init()
 
 void QUANRUPED::servo_attach()
 {
-	s0.attach(2);     s1.attach(3);     s2.attach(4);     s3.attach(5);     s4.attach(6);     s5.attach(7);     s6.attach(8);     s7.attach(9);     s8.attach(10);    s9.attach(11);    s10.attach(12);     s11.attach(13); s12.attach(A0);
+	s0.attach(2);     s1.attach(3);     s2.attach(4);     s3.attach(5);     s4.attach(6);     s5.attach(7);     s6.attach(8);     s7.attach(9);     s8.attach(10);    s9.attach(11);    s10.attach(12);     s11.attach(13); s12.attach(A7);
   s0.write(angle0); s1.write(angle1); s2.write(angle2); s3.write(angle3); s4.write(angle4); s5.write(angle5); s6.write(angle6); s7.write(angle7); s8.write(angle8); s9.write(angle9); s10.write(angle10); s11.write(angle11); s12.write(angle12); 	
 }
 
@@ -1233,317 +1234,55 @@ void QUANRUPED::turnleft()
 
 void QUANRUPED::advoid()
 {  
+  Serial.println("advoid");
   if(is_steaty_on()){
     steaty_off();
   }
   
-  /**********rotate forward and rotate backward to the initial position**********/
-  //PROCESS 4:(raise the second leg)
-  while(status4<=45){
-    status4++;
-    s0.write(angle0);
-    s2.write(angle2+10-i2H4);//100-i2H4
-    i2H4++;
-    if(i2H4==46 ){
-      i2H4=0;
-    }
-      
-    delay(actionspeed);
-    s4.write(angle4);
-    
-    s6.write(angle6+i6H4);//90+i6H4
-    i6H4++;
-    if(i6H4==46){
-        i6H4=0;
-    }
-    
-    delay(actionspeed);
+  while (true) {
+    do {
+      moveforward();
 
-    s8.write(angle8);
-  
-    s10.write(angle10+i10H4);//90+i10H4
-    i10H4++;
-    if(i10H4==46){
-      i10H4=0;
-    }
-    
-    delay(actionspeed);
-    s12.write(angle12+i12H4);
-      
-    if(i12H4<=20){
-      i12H4++;
-    }
+      ultrasonic();
 
-    else{
-      i12H4=20;
-    }
-
-    if(status4>45){
-      status4=0;
-      i12H4=0;
-      break;
-    }
-    if(Serial.available()>0){
-      break;
-    }
-  }
-    
-  //PROCESS 3:
-  /*(rorate second leg forward move second leg back to the ground) and
-  (torate first leg backward)*/
-  while(status3<=45){
-    status3++;
-
-    // Move back to touch the ground1
-    s0.write(angle0);//90
-    s1.write(angle1-i1H3);
-    i1H3++;
-    if(i1H3==46){
-      i1H3=0;
-    }
-      
-    delay(actionspeed);
-
-    // Rise the leg2
-    s2.write(angle2-45+i2H3);
-    i2H3++;
-    if(i2H3==46){
-      i2H3=0;
-    }
-
-    s3.write(angle3-67.5+i3H3);//45+i3H3
-    i3H3++; 
-    if(i3H3==46){
-      i3H3=0;
-    }
-    
-    delay(actionspeed);
-
-    // Move back to touch the ground3
-    s4.write(angle4);  //90
-    s5.write(angle5+30-i5H3);                              //165-i5H3
-    i5H3++;
-    if(i5H3==46){
-      i5H3=0;
-    }
-    
-    delay(actionspeed);
-
-    // Rise the leg4
-    s6.write(angle6+45-i6H3);
-    i6H3++;
-    if(i6H3==46){
-        i6H3=0;
-    }
-
-    s7.write(angle7+45-i7H3);
-    i7H3++;
-    if(i7H3==46){
-      i7H3=0;
-    }
-    
-    delay(actionspeed);
-
-    // Move back to touch the ground5
-    s8.write(angle8);  //90
-    s9.write(angle9-17.5+i9H3);//50+i9H3
-    i9H3++;
-    if(i9H3==46){
-      i9H3=0;
-    }
-    
-    delay(actionspeed);  
-
-    // Rise the leg6
-    s10.write(angle10+45-i10H3);
-    i10H3++;
-    if(i10H3==46){
-      i10H3=0;
-    }
-
-    s11.write(angle11-i11H3);                                          //45-i11H3
-    i11H3++;
-    if(i11H3==46){
-      i11H3=0;
-    }
-    
-    delay(actionspeed);
-    s12.write(angle12+20-i12H3);
-    
-    if(i12H3<=20){
-      i12H3++;
-    }
-    else{
-      i12H3=20;
-    }
-    
-    if(status3>45){
-      status3 = 0;
-      i12H3=0;
-      break;
-    }
-    if(Serial.available()>0){
-      break;
-    }
-  }
-  /*********rotate backward to the initial position and rotate forward**********/
-
-  //PROCESS 5:(raise the first leg)
-  while(status5<=45){
-    status5++;
-    s0.write(angle0-i0H5);//90-i0H5
-    i0H5++;
-    if(i0H5==46){
-      i0H5=0;
-    }
-    
-    s2.write(angle2);
-  
-    delay(actionspeed);
-    s4.write(angle4-i4H5);//90-i4H5
-      i4H5++;
-      if(i4H5==46){
-        i4H5=0;
-      }
-  
-    s6.write(angle6);
-    
-    delay(actionspeed);
-    s8.write(angle8+i8H5);//90+i8H5
-    i8H5++;
-    if(i8H5==46){
-      i8H5=0;
-    }
-
-    s10.write(angle10);
-
-    delay(actionspeed);
-    s12.write(angle12-i12H5);
-
-    if(i12H5<=20){
-      i12H5++;
-    }
-    else{
-      i12H5=20;
-    }
-
-    if(status5>45){
-      status5=0;
-      i12H5=0;
-      break;
-    }
-    if(Serial.available()>0){
-      break;
-    }
-  }
-
-  //PROCESS 1:
-  /*(rorate first leg forward move first leg back to the ground) and
-  (rorate second leg backward)*/
-  while(status1<=45){
-    status1++;
-    // Rise the leg1
-    s0.write(angle0-45+i0H1);
-    i0H1++;
-    if(i0H1==46){
-      i0H1=0;
-    }
-    s1.write(angle1-45+i1H1); 
-    i1H1++;
-    if(i1H1==46){
-      i1H1=0;
-    }
-    
-    delay(actionspeed);
-    // Move back to touch the ground2       
-    s2.write(angle2); 
-    s3.write(angle3-22.5-i3H1);//90-i3H1
-    i3H1++;
-    if(i3H1==46){
-      i3H1=0;                       
-    }
-                
-    delay(actionspeed);
-  
-    // Rise the leg3
-    s4.write(angle4-45+i4H1);
-    i4H1++;
-    if(i4H1==46){
-      i4H1=0;
-    }
-
-    s5.write(angle5-25+i5H1);//120+i5H1
-    i5H1++;
-    if(i5H1==46){
-      i5H1=0;
-    }
-    
-    delay(actionspeed);
-    // Move back to touch the ground4
-    s6.write(angle6); 
-    s7.write(angle7+i7H1);
-    i7H1++;
-    if(i7H1==46){
-      i7H1=0;
-    }
-    
-    delay(actionspeed);
-
-    // Rise the leg5
-    s8.write(angle8+45-i8H1);
-    i8H1++;
-    if(i8H1==46){
-      i8H1=0;
-    }
-
-    s9.write(angle9+27.5-i9H1);//95-i9H1
-    i9H1++;
-    if(i9H1==46){
-      i9H1=0;
-    }
-    
-    delay(actionspeed);
-    
-    // Move back to touch the ground6
-    s10.write(angle10);
-    s11.write(angle11-45+i11H1);//0+i11H1
-    i11H1++;
-    if(i11H1==46){
-      i11H1=0;
-    }
-      
-    delay(actionspeed);
-    s12.write(angle12-20+i12H1);
-
-    if(i12H1<=20){
-      i12H1++;
-    }
-    else{
-      i12H1=20;
-    }
-  
-    if(status1>45){
-      status1 = 0;
-      i12H1=0;
-      break;
-      }
-      if(Serial.available()>0){
+      if(p_softwareSerial->available()>0){
         break;
       }
-    }
+    }while (a > 20);
 
+    s12.write(180);//Look to right side
     ultrasonic();
-    if(a<=20 && a>0){
+    if (a > 20) {
+      
+      Serial.println("right");
       while(right<6){
         right++;
         turnright();
-        if(Serial.available()>0){
-        break;
+        if(p_softwareSerial->available()>0){
+          break;
         }
       }
       right=0;
+    } else {
+      s12.write(0);//Look to left side
+      ultrasonic();
+      if (a > 20) {
+      Serial.println("left");
+        while(left<6){
+          left++;
+          turnleft();
+          if(p_softwareSerial->available()>0){
+            break;
+          }
+        }
+        left=0;
+      }
     }
 
+    if(p_softwareSerial->available()>0){
+      break;
+    }
+  }
 }
 
 void QUANRUPED::ultrasonic()
@@ -1636,7 +1375,7 @@ void step_by_step(){
       status2=0;
       break;
     }
-    if(softwareSerial1.available()>0){
+    if(p_softwareSerial->available()>0){
       break;
     }
     delay(actionspeed);
@@ -1721,7 +1460,7 @@ void step_by_step(){
       status3=0;
       break;
     }
-    if(Serial.available()>0){
+    if(p_softwareSerial->available()>0){
       break;
     }
     delay(actionspeed);
@@ -1805,7 +1544,7 @@ void step_by_step(){
       status4=0;
       break;
     }
-    if(Serial.available()>0){
+    if(p_softwareSerial->available()>0){
       break;
     }
     delay(actionspeed);
@@ -1889,7 +1628,7 @@ void step_by_step(){
       status5=0;
       break;
     }
-    if(Serial.available()>0){
+    if(p_softwareSerial->available()>0){
       break;
     }
     delay(actionspeed);
@@ -2013,8 +1752,8 @@ void QUANRUPED::self_balanced_test()
   static float dRollFiltered  = 0;
 
   // ===== 当前误差 =====
-  float pitch = angle_pitch_output * 1; 
-  float roll  = angle_roll_output  * -1;
+  float pitch = angle_pitch_output * 1;
+  float roll  = angle_roll_output * -1;
 
   // ===== 死区（防抖）=====
   if (abs(pitch) < DEADZONE) pitch = 0;
@@ -2102,7 +1841,7 @@ void QUANRUPED::attack(){
         status4=0;
         break;
       }
-      if(Serial.available()>0){
+      if(p_softwareSerial->available()>0){
         break;
       }
     }
@@ -2119,7 +1858,7 @@ void QUANRUPED::attack(){
         status4=0;
         break;
       }
-      if(Serial.available()>0){
+      if(p_softwareSerial->available()>0){
         break;
       }
     }
@@ -2136,7 +1875,7 @@ void QUANRUPED::attack(){
         status4=0;
         break;
       }
-      if(Serial.available()>0){
+      if(p_softwareSerial->available()>0){
         break;
       }
     }
@@ -2153,7 +1892,7 @@ void QUANRUPED::attack(){
         status4=0;
         break;
       }
-      if(Serial.available()>0){
+      if(p_softwareSerial->available()>0){
         break;
       }
     }
@@ -2162,7 +1901,7 @@ void QUANRUPED::attack(){
     while(a>15){
       ultrasonic();
       original_latest();
-      if(Serial.available()>0){
+      if(p_softwareSerial->available()>0){
         break;
       }
     }
