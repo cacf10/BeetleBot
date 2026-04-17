@@ -1956,66 +1956,113 @@ void QUANRUPED::self_balanced_setup()
 
 void QUANRUPED::self_balanced()
 {
-	read_mpu_6050_data();                                                //Read the raw acc and gyro data from the MPU-6050
-  gyro_x -= gyro_x_cal;                                                //Subtract the offset calibration value from the raw gyro_x value
-  gyro_y -= gyro_y_cal;                                                //Subtract the offset calibration value from the raw gyro_y value
-  gyro_z -= gyro_z_cal;                                                //Subtract the offset calibration value from the raw gyro_z value
-  //Gyro angle calculations
-  angle_pitch += gyro_x * 0.0000611;                                   //Calculate the traveled pitch angle and add this to the angle_pitch variable
-  angle_roll += gyro_y * 0.0000611;                                    //Calculate the traveled roll angle and add this to the angle_roll variable
-  angle_pitch += angle_roll * sin(gyro_z * 0.000001066);               //If the IMU has yawed transfer the roll angle to the pitch angel
-  angle_roll -= angle_pitch * sin(gyro_z * 0.000001066);               //If the IMU has yawed transfer the pitch angle to the roll angel
-  //Accelerometer angle calculations
-  acc_total_vector = sqrt((acc_x*acc_x)+(acc_y*acc_y)+(acc_z*acc_z));  //Calculate the total accelerometer vector
-  angle_pitch_acc = asin((float)acc_y/acc_total_vector)* 57.296;       //Calculate the pitch angle
-  angle_roll_acc = asin((float)acc_x/acc_total_vector)* -57.296;       //Calculate the roll angle
-  //Place the MPU-6050 spirit level and note the values in the following two lines for calibration
-  angle_pitch_acc -= 0.0;                                              //Accelerometer calibration value for pitch
-  angle_roll_acc -= 0.0;                                               //Accelerometer calibration value for roll
-  if(set_gyro_angles){                                                 //If the IMU is already started
-    angle_pitch = angle_pitch * 0.9996 + angle_pitch_acc * 0.0004;     //Correct the drift of the gyro pitch angle with the accelerometer pitch angle
-    angle_roll = angle_roll * 0.9996 + angle_roll_acc * 0.0004;        //Correct the drift of the gyro roll angle with the accelerometer roll angle
+  read_mpu_6050_data();
+
+  gyro_x -= gyro_x_cal;
+  gyro_y -= gyro_y_cal;
+  gyro_z -= gyro_z_cal;
+
+  float dt = (micros() - loop_timer) / 1000000.0;
+  loop_timer = micros();
+
+  // ===== 陀螺仪积分 =====
+  angle_pitch += gyro_x * dt * 0.0611;
+  angle_roll  += gyro_y * dt * 0.0611;
+
+  // ===== 加速度 =====
+  acc_total_vector = sqrt((acc_x*acc_x)+(acc_y*acc_y)+(acc_z*acc_z));
+
+  if(abs(acc_y) < acc_total_vector){
+    angle_pitch_acc = asin((float)acc_y/acc_total_vector)*57.296;
   }
-  else{                                                                //At first start
-    angle_pitch = angle_pitch_acc;                                     //Set the gyro pitch angle equal to the accelerometer pitch angle 
-    angle_roll = angle_roll_acc;                                       //Set the gyro roll angle equal to the accelerometer roll angle 
-    set_gyro_angles = true;                                            //Set the IMU started flag
+  if(abs(acc_x) < acc_total_vector){
+    angle_roll_acc  = asin((float)acc_x/acc_total_vector)*-57.296;
   }
-  //To dampen the pitch and roll angles a complementary filter is used
-  angle_pitch_output = angle_pitch_output * 0.9 + angle_pitch * 0.1;   //Take 90% of the output pitch value and add 10% of the raw pitch value
-  angle_roll_output = angle_roll_output * 0.9 + angle_roll * 0.1;      //Take 90% of the output roll value and add 10% of the raw roll value
-  while(micros() - loop_timer < 4000);                                 //Wait until the loop_timer reaches 4000us (250Hz) before starting the next loop
-  loop_timer = micros();                                               //Reset the loop timer
+
+  // ===== 互补滤波 =====
+  angle_pitch = angle_pitch * 0.98 + angle_pitch_acc * 0.02;
+  angle_roll  = angle_roll  * 0.98 + angle_roll_acc  * 0.02;
+
+  // ===== 输出平滑 =====
+  angle_pitch_output = angle_pitch_output * 0.9 + angle_pitch * 0.1;
+  angle_roll_output  = angle_roll_output  * 0.9 + angle_roll  * 0.1;
 }
 
 void QUANRUPED::self_balanced_test()
 {
-  Serial.println("self_balanced_test()");
-  // ===== 参数可调 =====
-  const float DEADZONE = 1.5;      // 死区（度）
-  const float KP_PITCH = 2.2;      // 左右倾斜增益
-  const float KP_ROLL  = 2.0;      // 前后倾斜增益
-  const float MAX_COMP = 18;       // 最大补偿角
+  // ===== 参数（可以调）=====
+  const float KP_PITCH = 2.2;
+  const float KI_PITCH = 0.02;
+  const float KD_PITCH = 0.6;
 
+  const float KP_ROLL  = 2.0;
+  const float KI_ROLL  = 0.02;
+  const float KD_ROLL  = 0.6;
+
+  const float DEADZONE = 1.0;
+  const float MAX_COMP = 20.0;
+
+  // ===== PID状态（必须static）=====
+  static float pitchIntegral = 0;
+  static float rollIntegral  = 0;
+
+  static float lastPitch = 0;
+  static float lastRoll  = 0;
+
+  static float dPitchFiltered = 0;
+  static float dRollFiltered  = 0;
+
+  // ===== 当前误差 =====
   float pitch = angle_pitch_output;
   float roll  = angle_roll_output;
 
-  // ===== 死区 =====
+  // ===== 死区（防抖）=====
   if (abs(pitch) < DEADZONE) pitch = 0;
   if (abs(roll)  < DEADZONE) roll  = 0;
 
-  // ===== 比例补偿 =====
-  float pitchComp = constrain(pitch * KP_PITCH, -MAX_COMP, MAX_COMP);
-  float rollComp  = constrain(roll  * KP_ROLL,  -MAX_COMP, MAX_COMP);
+  // ===== 积分（防风up）=====
+  if (abs(pitch) < 20) pitchIntegral += pitch;
+  if (abs(roll)  < 20) rollIntegral  += roll;
 
-  // ===== 六足高度补偿 =====
-  // 左右三排（pitch）
-  // 前中后三列（roll）
+  pitchIntegral = constrain(pitchIntegral, -100, 100);
+  rollIntegral  = constrain(rollIntegral,  -100, 100);
 
+  // ===== 微分（带低通滤波，防抖关键）=====
+  float dPitch = pitch - lastPitch;
+  float dRoll  = roll  - lastRoll;
+
+  // 一阶低通滤波（非常关键！）
+  dPitchFiltered = dPitchFiltered * 0.7 + dPitch * 0.3;
+  dRollFiltered  = dRollFiltered  * 0.7 + dRoll  * 0.3;
+
+  lastPitch = pitch;
+  lastRoll  = roll;
+
+  // ===== PID输出 =====
+  float pitchComp =
+      KP_PITCH * pitch +
+      KI_PITCH * pitchIntegral +
+      KD_PITCH * dPitchFiltered;
+
+  float rollComp =
+      KP_ROLL * roll +
+      KI_ROLL * rollIntegral +
+      KD_ROLL * dRollFiltered;
+
+  // ===== 限幅 =====
+  pitchComp = constrain(pitchComp, -MAX_COMP, MAX_COMP);
+  rollComp  = constrain(rollComp,  -MAX_COMP, MAX_COMP);
+
+  // ===== 六足姿态补偿 =====
+  // 左右分组（pitch）
+  // 前中后（roll权重不同）
+
+  // 左侧
   s0.write(angle0 - pitchComp - rollComp * 0.3);   // 左前
   s2.write(angle2 - pitchComp - rollComp * 1.0);   // 左中
   s4.write(angle4 - pitchComp - rollComp * 0.7);   // 左后
 
+  // 右侧
   s6.write(angle6 + pitchComp - rollComp * 0.3);   // 右前
   s8.write(angle8 + pitchComp - rollComp * 1.0);   // 右中
   s10.write(angle10 + pitchComp - rollComp * 0.7); // 右后
