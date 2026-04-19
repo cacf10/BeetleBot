@@ -225,7 +225,7 @@ void QUANRUPED::servo_init()
 
 void QUANRUPED::servo_attach()
 {
-	s0.attach(2);     s1.attach(3);     s2.attach(4);     s3.attach(5);     s4.attach(6);     s5.attach(7);     s6.attach(8);     s7.attach(9);     s8.attach(10);    s9.attach(11);    s10.attach(12);     s11.attach(13); s12.attach(A7);
+	s0.attach(2);     s1.attach(3);     s2.attach(4);     s3.attach(5);     s4.attach(6);     s5.attach(7);     s6.attach(8);     s7.attach(9);     s8.attach(10);    s9.attach(11);    s10.attach(12);     s11.attach(13); s12.attach(A5);
   s0.write(angle0); s1.write(angle1); s2.write(angle2); s3.write(angle3); s4.write(angle4); s5.write(angle5); s6.write(angle6); s7.write(angle7); s8.write(angle8); s9.write(angle9); s10.write(angle10); s11.write(angle11); s12.write(angle12); 	
 }
 
@@ -1250,11 +1250,7 @@ void QUANRUPED::advoid()
       }
     }while (a > 20);
 
-    s12.write(180);//Look to right side
-    ultrasonic();
-    if (a > 20) {
-      
-      Serial.println("right");
+    do {
       while(right<6){
         right++;
         turnright();
@@ -1263,21 +1259,14 @@ void QUANRUPED::advoid()
         }
       }
       right=0;
-    } else {
-      s12.write(0);//Look to left side
+      
       ultrasonic();
-      if (a > 20) {
-      Serial.println("left");
-        while(left<6){
-          left++;
-          turnleft();
-          if(p_softwareSerial->available()>0){
-            break;
-          }
-        }
-        left=0;
+
+      if(p_softwareSerial->available()>0){
+        break;
       }
-    }
+    } while(a <= 20);
+
 
     if(p_softwareSerial->available()>0){
       break;
