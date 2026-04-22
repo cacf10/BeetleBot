@@ -1719,15 +1719,15 @@ void QUANRUPED::self_balanced()
 void QUANRUPED::self_balanced_test()
 {
   // ===== 参数（可以调）=====
-  const float KP_PITCH = 2.2;
-  const float KI_PITCH = 0.02;
+  const float KP_PITCH = 6;
+  const float KI_PITCH = 0.04;
   const float KD_PITCH = 0.6;
 
-  const float KP_ROLL  = 2.0;
-  const float KI_ROLL  = 0.02;
+  const float KP_ROLL  = 6;
+  const float KI_ROLL  = 0.04;
   const float KD_ROLL  = 0.6;
 
-  const float DEADZONE = 1.0;
+  const float DEADZONE = 2.0;
   const float MAX_COMP = 20.0;
 
   // ===== PID状态（必须static）=====
@@ -1741,8 +1741,8 @@ void QUANRUPED::self_balanced_test()
   static float dRollFiltered  = 0;
 
   // ===== 当前误差 =====
-  float pitch = angle_pitch_output * 1;
-  float roll  = angle_roll_output * -1;
+  float pitch = angle_pitch_output * -1;
+  float roll  = angle_roll_output * 1;
 
   // ===== 死区（防抖）=====
   if (abs(pitch) < DEADZONE) pitch = 0;
